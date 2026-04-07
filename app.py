@@ -94,47 +94,49 @@ def availability_page():
 def format_vnd(amount):
     return f"{int(amount):,} ₫".replace(',', '.')
 
-# 4. Trang Nhập Tiền Chi & Dashboard KPI
+# 4. Trang Nhập Tiền Chi & Dashboard KPI (ĐÃ CÓ LỌC THÁNG)
 @app.route('/expenses')
 def expenses_page():
-    transactions = [] # Tạo một mảng chung chứa cả Thu và Chi
-    total_income = 0
-    total_expenses = 0
+    # 1. Nhận tháng từ trình duyệt gửi lên, mặc định là tháng hiện tại (VD: 2026-04)
+    selected_month = request.args.get('month')
+    if not selected_month:
+        selected_month = datetime.now().strftime('%Y-%m')
+
+    transactions = [] 
     water_dates = []
 
-    # BƯỚC A: LẤY DỮ LIỆU BOOKING (THU)
+    # BƯỚC A: LẤY TOÀN BỘ BOOKING (THU)
     res_b = requests.post(f"https://api.notion.com/v1/databases/{BOOKING_DB_ID}/query", headers=headers)
     bookings_data = res_b.json().get('results', [])
     
     for b in bookings_data:
         props = b.get('properties', {})
-        page_id = b.get('id') # Lấy ID để phục vụ tính năng Xóa
+        page_id = b.get('id') 
         
         name_list = props.get('Name', {}).get('title', [])
-        name = name_list[0].get('text', {}).get('content', 'Khách ẩn danh') if name_list else 'Khách ẩn danh'
+        name = name_list[0].get('text', {}).get('content', 'Khách') if name_list else 'Khách'
         
         total = props.get('Total', {}).get('number', 0)
         checkin_full = props.get('Checkin', {}).get('date', {}).get('start', '')
         checkin_date = checkin_full[:10] if checkin_full else '1970-01-01'
         
-        if total: total_income += total
-        
         transactions.append({
             "id": page_id,
-            "desc": f"Booking: {name}", # Gắn nhãn để dễ nhìn
+            "desc": f"Booking: {name}",
             "date": checkin_date,
+            "amount": total if total else 0, # Giữ số thực để tính toán
             "amount_str": f"+ {format_vnd(total)}" if total else "+ 0 ₫",
-            "type": "income", # Phân loại Thu
-            "raw_date": checkin_date # Dùng để sắp xếp
+            "type": "income",
+            "raw_date": checkin_date 
         })
 
-    # BƯỚC B: LẤY DỮ LIỆU TIỀN CHI (CHI)
+    # BƯỚC B: LẤY TOÀN BỘ TIỀN CHI (CHI)
     res_e = requests.post(f"https://api.notion.com/v1/databases/{EXPENSES_DB_ID}/query", headers=headers)
     expenses_data = res_e.json().get('results', [])
     
     for e in expenses_data:
         props = e.get('properties', {})
-        page_id = e.get('id') # Lấy ID
+        page_id = e.get('id')
         
         amount = props.get('Amount', {}).get('number', 0)
         reason_list = props.get('Reason', {}).get('title', [])
@@ -143,7 +145,6 @@ def expenses_page():
         date = props.get('Date', {}).get('date', {}).get('start', '')
         if not date: date = '1970-01-01'
         
-        if amount: total_expenses += amount
         if '[💧 NƯỚC]' in reason and date != '1970-01-01':
             water_dates.append(date)
 
@@ -151,15 +152,16 @@ def expenses_page():
             "id": page_id,
             "desc": reason,
             "date": date,
+            "amount": amount if amount else 0, # Giữ số thực để tính toán
             "amount_str": f"- {format_vnd(amount)}" if amount else "- 0 ₫",
-            "type": "expense", # Phân loại Chi
+            "type": "expense",
             "raw_date": date
         })
 
-    # BƯỚC C: TRỘN VÀ SẮP XẾP CHUNG THEO NGÀY (Mới nhất lên đầu)
+    # BƯỚC C: SẮP XẾP CHUNG THEO NGÀY
     transactions.sort(key=lambda x: x['raw_date'], reverse=True)
 
-    # BƯỚC D: TÍNH TOÁN KPI NƯỚC (Giữ nguyên logic cũ)
+    # BƯỚC D: TÍNH TOÁN KPI NƯỚC (Dùng TẤT CẢ dữ liệu, vì nước mua tháng trước vẫn uống tháng này)
     if water_dates:
         water_dates.sort(reverse=True)
         last_water_date = water_dates[0]
@@ -175,17 +177,38 @@ def expenses_page():
         bookings_since_water = len([t for t in transactions if t['type'] == 'income'])
 
     remaining_water = 25 - (bookings_since_water * 2)
+
+    # BƯỚC E: LỌC DỮ LIỆU & TÍNH TÀI CHÍNH THEO THÁNG ĐƯỢC CHỌN
+    filtered_transactions = []
+    total_income = 0
+    total_expenses = 0
+    total_cleaning = 0
+
+    for t in transactions:
+        # Chỉ lấy những giao dịch có ngày bắt đầu bằng tháng được chọn (VD: "2026-04-15".startswith("2026-04"))
+        if t['raw_date'].startswith(selected_month):
+            filtered_transactions.append(t)
+            if t['type'] == 'income':
+                total_income += t['amount']
+            else:
+                total_expenses += t['amount']
+                if "dọn phòng" in t['desc'].lower():
+                    total_cleaning += t['amount']
+
     profit = total_income - total_expenses
 
     return render_template('expenses.html',
+        selected_month=selected_month, # Truyền tháng đang chọn ra giao diện
         kpi_expenses=format_vnd(total_expenses),
         kpi_profit=format_vnd(profit),
+        kpi_cleaning=format_vnd(total_cleaning),
         is_profit_positive=(profit >= 0),
         kpi_water=remaining_water,
-        kpi_water_date=last_water_date if last_water_date else "Chưa ghi nhận",
-        transactions=transactions # Đẩy mảng chung xuống giao diện
+        kpi_water_date=last_water_date if last_water_date else "Chưa ghi",
+        transactions=filtered_transactions # Chỉ gửi danh sách của tháng này
     )
 
+#5 
 @app.route('/api/bookings')
 def get_bookings():
     query_url = f"https://api.notion.com/v1/databases/{BOOKING_DB_ID}/query"
@@ -232,7 +255,7 @@ def submit_booking():
     checkin_iso = f"{checkin_date}T{checkin_hour}:00"
     checkout_iso = f"{checkout_date}T{checkout_hour}:00"
 
-    # CHUYỂN STRING THÀNH ĐỐI TƯỢNG THỜI GIAN ĐỂ TÍNH TOÁN
+    # CHUYỂN STRING THÀNH ĐỐI TƯỢNG THỜI GIAN ĐỂ TÍNH TOÁN (Giữ nguyên múi giờ Local để check)
     try:
         new_start = datetime.strptime(checkin_iso, "%Y-%m-%dT%H:%M:%S")
         new_end = datetime.strptime(checkout_iso, "%Y-%m-%dT%H:%M:%S")
@@ -286,15 +309,20 @@ def submit_booking():
             except Exception:
                 continue
 
+    # NẾU KHÔNG TRÙNG -> LƯU BOOKING VÀO NOTION
     data_booking = {
         "parent": {"database_id": BOOKING_DB_ID},
         "properties": {
             "Name": {"title": [{"text": {"content": guest_name}}]},
-            "Checkin": {"date": {"start": checkin_iso}},
-            "Checkout": {"date": {"start": checkout_iso}},
+            
+            # ĐÃ SỬA Ở ĐÂY: Thêm +07:00 vào đuôi để Notion hiểu đây là giờ Việt Nam
+            "Checkin": {"date": {"start": f"{checkin_iso}+07:00"}},
+            "Checkout": {"date": {"start": f"{checkout_iso}+07:00"}},
+            
             "Total": {"number": int(total_amount)}
         }
     }
+    
     res = requests.post(url, headers=headers, json=data_booking)
     if res.status_code != 200:
         return jsonify({"success": False, "error": "Lỗi lưu Booking: " + res.text}), 400
