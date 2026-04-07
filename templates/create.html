@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thêm Booking Mới | Limoon Homestay</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1em;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 via-gray-100 to-slate-200 min-h-screen flex items-center justify-center p-4 sm:p-8">
+    <div class="w-full max-w-lg glass-panel rounded-[2rem] shadow-2xl p-8 sm:p-10 relative">
+        
+        <a href="/" class="absolute top-8 left-8 p-2 rounded-full hover:bg-white/50 transition-colors text-slate-500 hover:text-slate-800 z-10">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+        </a>
+
+        <div class="text-center mb-8 mt-2">
+            <div class="inline-flex items-center justify-center w-12 h-12 bg-slate-800 text-white rounded-xl mb-4 shadow-md">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+                </svg>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Tạo Booking Mới</h1>
+            <p class="text-slate-500 mt-1 text-sm">Hệ thống sẽ tự check trùng giờ & khóa 1 tiếng dọn phòng</p>
+        </div>
+
+        <form id="bookingForm" class="space-y-5">
+            
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1">Tên khách hàng</label>
+                <input type="text" name="guest_name" required placeholder="VD: Nguyễn Văn A" 
+                       class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/50 focus:bg-white focus:ring-2 focus:ring-slate-800 focus:border-transparent outline-none transition-all placeholder:text-slate-400">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Check-in</label>
+                    <div class="flex gap-2">
+                        <input type="date" name="checkin_date" required id="checkin-date"
+                               class="w-[65%] px-3 py-3 rounded-xl border border-slate-200 bg-white/50 focus:bg-white focus:ring-2 focus:ring-slate-800 outline-none text-slate-700">
+                        <select name="checkin_hour" required class="w-[35%] px-2 py-3 rounded-xl border border-slate-200 bg-white/50 focus:bg-white focus:ring-2 focus:ring-slate-800 outline-none text-slate-700 font-medium cursor-pointer">
+                            <option value="00:00">00:00</option><option value="01:00">01:00</option><option value="02:00">02:00</option><option value="03:00">03:00</option>
+                            <option value="04:00">04:00</option><option value="05:00">05:00</option><option value="06:00">06:00</option><option value="07:00">07:00</option>
+                            <option value="08:00">08:00</option><option value="09:00">09:00</option><option value="10:00">10:00</option><option value="11:00">11:00</option>
+                            <option value="12:00">12:00</option><option value="13:00">13:00</option><option value="14:00" selected>14:00</option><option value="15:00">15:00</option>
+                            <option value="16:00">16:00</option><option value="17:00">17:00</option><option value="18:00">18:00</option><option value="19:00">19:00</option>
+                            <option value="20:00">20:00</option><option value="21:00">21:00</option><option value="22:00">22:00</option><option value="23:00">23:00</option>
+                        </select>
+                    </div>
+                </div>
+            
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Check-out</label>
+                    <div class="flex gap-2">
+                        <input type="date" name="checkout_date" required id="checkout-date"
+                               class="w-[65%] px-3 py-3 rounded-xl border border-slate-200 bg-white/50 focus:bg-white focus:ring-2 focus:ring-slate-800 outline-none text-slate-700">
+                        <select name="checkout_hour" required class="w-[35%] px-2 py-3 rounded-xl border border-slate-200 bg-white/50 focus:bg-white focus:ring-2 focus:ring-slate-800 outline-none text-slate-700 font-medium cursor-pointer">
+                            <option value="00:00">00:00</option><option value="01:00">01:00</option><option value="02:00">02:00</option><option value="03:00">03:00</option>
+                            <option value="04:00">04:00</option><option value="05:00">05:00</option><option value="06:00">06:00</option><option value="07:00">07:00</option>
+                            <option value="08:00">08:00</option><option value="09:00">09:00</option><option value="10:00">10:00</option><option value="11:00">11:00</option>
+                            <option value="12:00" selected>12:00</option><option value="13:00">13:00</option><option value="14:00">14:00</option><option value="15:00">15:00</option>
+                            <option value="16:00">16:00</option><option value="17:00">17:00</option><option value="18:00">18:00</option><option value="19:00">19:00</option>
+                            <option value="20:00">20:00</option><option value="21:00">21:00</option><option value="22:00">22:00</option><option value="23:00">23:00</option>
+                        </select>
+                    </div>
+                </div>
+                
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1">Tổng tiền (VNĐ)</label>
+                <div class="relative">
+                    <input type="number" name="total_amount" required placeholder="VD: 1500000" 
+                           class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/50 focus:bg-white focus:ring-2 focus:ring-slate-800 outline-none placeholder:text-slate-400 pr-12">
+                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">VNĐ</span>
+                </div>
+            </div>
+
+            <div class="flex items-start mt-4 bg-orange-50 p-4 rounded-xl border border-orange-100 cursor-pointer hover:bg-orange-100 transition-colors" onclick="document.getElementById('cleaning-checkbox').click()">
+                <div class="flex items-center h-5">
+                    <input id="cleaning-checkbox" name="cleaning_fee" type="checkbox" value="yes" checked class="w-4 h-4 text-orange-600 rounded focus:ring-orange-500 cursor-pointer" onclick="event.stopPropagation()">
+                </div>
+                <div class="ml-3 text-sm">
+                    <label for="cleaning-checkbox" class="font-bold text-slate-800 cursor-pointer">Cần dọn phòng cho booking này (50.000đ) 🧹</label>
+                    <p class="text-slate-500 text-xs mt-0.5">Sẽ tự động ghi nhận 1 khoản chi phí dọn dẹp vào sổ.</p>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full mt-6 bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-slate-900 transition-all duration-200">
+                Xác nhận Lưu Booking
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // Set ngày hiện tại mặc định
+        document.addEventListener('DOMContentLoaded', function() {
+            var today = new Date().toISOString().split('T')[0];
+            document.getElementById("checkin-date").value = today;
+            document.getElementById("checkout-date").value = today;
+        });
+
+        // XỬ LÝ SUBMIT AJAX NGẦM
+        document.getElementById('bookingForm').addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            submitBtn.innerHTML = `Đang check trùng giờ... ⏳`;
+            submitBtn.disabled = true;
+
+            fetch('/submit-booking', {
+                method: 'POST',
+                body: new FormData(this)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Tạo phòng thành công!',
+                        text: 'Lịch và Dòng tiền đã được cập nhật.',
+                        showCancelButton: true,
+                        confirmButtonText: 'Xem Lịch',
+                        cancelButtonText: 'Thêm Khách Nữa',
+                        customClass: { popup: 'rounded-2xl' }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/availability'; // Chuyển sang xem lịch
+                        } else {
+                            window.location.reload(); // Reset form nhập khách khác
+                        }
+                    });
+                } else {
+                    // BÁO LỖI NẾU TRÙNG GIỜ
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Không thể thêm khách!',
+                        text: data.error,
+                        customClass: { popup: 'rounded-2xl' }
+                    });
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                Swal.fire('Lỗi!', 'Mất kết nối máy chủ.', 'error');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Tài Chính & Vật Tư | Limoon Homestay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 via-gray-100 to-slate-200 min-h-screen flex items-center justify-center p-4 sm:p-8">
+    
+    <div class="w-full max-w-7xl glass-panel rounded-[2rem] shadow-2xl p-6 sm:p-10 relative border-t-4 border-rose-500 flex flex-col gap-8">
+        
+        <div class="flex items-center gap-4">
+            <a href="/" class="p-2 rounded-full hover:bg-white/50 transition-colors text-slate-500 hover:text-rose-600 bg-white shadow-sm border border-slate-100">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Tài Chính & Vận Hành</h1>
+                <p class="text-slate-500 text-sm">Cập nhật chi phí, xem lợi nhuận và tình trạng vật tư</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white/80 p-5 rounded-2xl shadow-sm border border-white">
+                <p class="text-xs text-slate-400 uppercase font-bold mb-1">Tổng Tiền Chi</p>
+                <p class="text-2xl font-bold text-rose-600">{{ kpi_expenses }}</p>
+            </div>
+            
+            <div class="bg-white/80 p-5 rounded-2xl shadow-sm border border-white">
+                <p class="text-xs text-slate-400 uppercase font-bold mb-1">Lợi Nhuận (Thu - Chi)</p>
+                {% if is_profit_positive %}
+                    <p class="text-2xl font-bold text-emerald-600">{{ kpi_profit }}</p>
+                {% else %}
+                    <p class="text-2xl font-bold text-rose-600">{{ kpi_profit }}</p>
+                {% endif %}
+            </div>
+
+            <div class="bg-white/80 p-5 rounded-2xl shadow-sm border border-white">
+                <p class="text-xs text-slate-400 uppercase font-bold mb-1">Số Lượng Nước Lọc</p>
+                <p class="text-2xl font-bold {% if kpi_water <= 5 %}text-orange-500{% else %}text-blue-500{% endif %}">
+                    {{ kpi_water }} <span class="text-sm font-medium text-slate-400">/ 25 chai</span>
+                </p>
+            </div>
+
+            <div class="bg-white/80 p-5 rounded-2xl shadow-sm border border-white">
+                <p class="text-xs text-slate-400 uppercase font-bold mb-1">Lần Mua Nước Gần Nhất</p>
+                <p class="text-xl font-bold text-slate-700 mt-1">{{ kpi_water_date }}</p>
+            </div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            
+            <div class="w-full lg:w-1/3 bg-white/50 p-6 rounded-2xl border border-white shadow-sm">
+                <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center">
+                    <span class="bg-rose-100 text-rose-600 p-1.5 rounded-lg mr-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    </span>
+                    Thêm Khoản Chi
+                </h2>
+
+                <form id="expenseForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Lý do chi</label>
+                        <input type="text" name="reason" required placeholder="VD: Mua xà phòng..." 
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-rose-500 outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Ngày chi</label>
+                        <input type="date" name="date" required id="expense-date"
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-rose-500 outline-none text-sm text-slate-700">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Số tiền (VNĐ)</label>
+                        <input type="number" name="amount" required placeholder="VD: 500000" 
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-rose-500 outline-none text-sm">
+                    </div>
+                    <div class="flex items-start mt-4 bg-blue-50 p-3 rounded-xl border border-blue-100 cursor-pointer hover:bg-blue-100 transition-colors" onclick="document.getElementById('water-checkbox').click()">
+                        <div class="flex items-center h-5">
+                            <input id="water-checkbox" name="bought_water" type="checkbox" value="yes" class="w-4 h-4 text-rose-600 rounded focus:ring-rose-500 cursor-pointer" onclick="event.stopPropagation()">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="water-checkbox" class="font-medium text-slate-700 cursor-pointer">Trong khoản chi này có mua Nước 💧</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full mt-2 bg-rose-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-rose-700 transition-all duration-200">
+                        Xác nhận Lưu Sổ
+                    </button>
+                </form>
+            </div>
+
+            <div class="w-full lg:w-2/3 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col">
+                <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center">
+                    <span class="bg-slate-100 text-slate-600 p-1.5 rounded-lg mr-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </span>
+                    Bảng Dòng Tiền (Thu & Chi)
+                </h2>
+                
+                <div class="overflow-y-auto custom-scrollbar flex-1" style="max-height: 400px;">
+                    <table class="w-full text-left text-sm text-slate-500">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-50 sticky top-0 z-10">
+                            <tr>
+                                <th scope="col" class="px-4 py-3 rounded-tl-lg">Mô tả</th>
+                                <th scope="col" class="px-4 py-3">Loại</th>
+                                <th scope="col" class="px-4 py-3">Ngày</th>
+                                <th scope="col" class="px-4 py-3 text-right">Số Tiền</th>
+                                <th scope="col" class="px-4 py-3 text-center rounded-tr-lg">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in transactions %}
+                            <tr class="bg-white border-b hover:bg-slate-50 transition-colors">
+                                <td class="px-4 py-3 font-medium text-slate-900">{{ t.desc }}</td>
+                                <td class="px-4 py-3">
+                                    {% if t.type == 'income' %}
+                                        <span class="px-2 py-1 text-xs font-semibold text-emerald-700 bg-emerald-100 rounded-md">Thu</span>
+                                    {% else %}
+                                        <span class="px-2 py-1 text-xs font-semibold text-rose-700 bg-rose-100 rounded-md">Chi</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3">{{ t.date }}</td>
+                                <td class="px-4 py-3 text-right font-semibold {% if t.type == 'income' %}text-emerald-600{% else %}text-rose-600{% endif %}">
+                                    {{ t.amount_str }}
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <button onclick="confirmDelete('{{ t.id }}')" class="text-slate-400 hover:text-red-600 transition-colors p-1" title="Xóa dòng này">
+                                        <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="px-4 py-8 text-center text-slate-400">Chưa có giao dịch nào được ghi nhận.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Set ngày hiện tại cho Form
+        document.addEventListener('DOMContentLoaded', function() {
+            var today = new Date().toISOString().split('T')[0];
+            document.getElementById("expense-date").value = today;
+        });
+
+        // XỬ LÝ SUBMIT FORM NGẦM (AJAX)
+        document.getElementById('expenseForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Chặn việc chuyển trang
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            // Đổi hiệu ứng nút
+            submitBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                Đang xử lý...
+            `;
+            submitBtn.disabled = true;
+
+            const formData = new FormData(this);
+
+            fetch('/submit-expense', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Đã lưu sổ!',
+                        text: 'Khoản chi đã được cập nhật.',
+                        showConfirmButton: false,
+                        timer: 1500,
+                        customClass: { popup: 'rounded-2xl' }
+                    }).then(() => {
+                        window.location.reload(); // Reload nhẹ trang để lấy dữ liệu mới nhét vào bảng
+                    });
+                } else {
+                    Swal.fire('Lỗi!', 'Không thể lưu: ' + data.error, 'error');
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Lỗi!', 'Không thể kết nối đến máy chủ.', 'error');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+
+        // Hàm xử lý Xóa
+        function confirmDelete(pageId) {
+            Swal.fire({
+                title: 'Có chắc xóa không hả em pé ??',
+                text: "Dữ liệu đã vô thùng rác",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Oke xóa lunnn!',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/delete-transaction/' + pageId, {
+                        method: 'POST',
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.success) {
+                            Swal.fire({
+                                title: 'Đã xóa!',
+                                text: 'Giao dịch mất tiêu!',
+                                icon: 'success',
+                                showConfirmButton: false,
+                                timer: 1500
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire('Lỗi!', 'Không thể xóa: ' + data.error, 'error');
+                        }
+                    });
+                }
+            })
+        }
+    </script>
+</body>
+</html>

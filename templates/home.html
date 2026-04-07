@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limoon Homestay | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 via-gray-100 to-slate-200 min-h-screen flex items-center justify-center p-4 sm:p-8">
+
+    <div class="w-full max-w-4xl glass-panel rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row">
+        
+        <div class="w-full md:w-5/12 bg-white/40 p-8 sm:p-10 flex flex-col justify-between border-b md:border-b-0 md:border-r border-white/50">
+            <div>
+                <div class="inline-flex items-center justify-center w-12 h-12 bg-slate-800 text-white rounded-xl mb-6 shadow-md">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                </div>
+                <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Limoon Homestay</h1>
+                
+                <div class="flex items-center mt-2">
+                    <span class="text-3xl mr-3">🐈</span> <p class="text-slate-500 font-medium">Xin chào em pé, lại có khách book à </p> 
+                </div>
+            </div>
+
+            <div class="mt-10 grid grid-cols-2 gap-4">
+                <div class="bg-white/60 p-4 rounded-2xl border border-white/50 shadow-sm">
+                    <p class="text-xs text-slate-400 uppercase tracking-wider font-bold mb-1">Doanh thu</p>
+                    <p class="text-xl font-bold text-emerald-600">{{ kpi_monthly_revenue }}</p>
+                </div>
+                <div class="bg-white/60 p-4 rounded-2xl border border-white/50 shadow-sm">
+                    <p class="text-xs text-slate-400 uppercase tracking-wider font-bold mb-1">Tỉ lệ trống</p>
+                    <p class="text-xl font-bold text-slate-700">{{ kpi_vacancy_rate }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full md:w-7/12 p-8 sm:p-10 flex flex-col justify-center">
+            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6">Lối tắt thao tác</h2>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                
+                <a href="/availability" class="group relative bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-200">
+                    <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-semibold text-slate-800 text-lg">Lịch trống</h3>
+                    <p class="text-sm text-slate-500 mt-1">Xem còn phòng ở đâyyy</p>
+                </a>
+
+                <a href="/expenses" class="group relative bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-200">
+                    <div class="w-10 h-10 bg-rose-50 text-rose-600 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-semibold text-slate-800 text-lg">Tiền chi</h3>
+                    <p class="text-sm text-slate-500 mt-1">Ghi nhận các khoản chi</p>
+                </a>
+
+                <a href="/create" class="sm:col-span-2 group relative bg-slate-800 p-6 rounded-2xl shadow-lg hover:bg-slate-900 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full duration-1000 transition-transform"></div>
+                    
+                    <div class="relative flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-white/20 text-white rounded-lg flex items-center justify-center mr-4">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-lg">Nhập phòng mới</h3>
+                                <p class="text-sm text-slate-300 mt-0.5">Tạo phòng checkin </p>
+                            </div>
+                        </div>
+                        <svg class="w-6 h-6 text-slate-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

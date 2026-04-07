@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch Trống | Limoon Homestay</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        .fc-theme-standard .fc-scrollgrid { border-radius: 1rem; overflow: hidden; border: 1px solid #e2e8f0; }
+        .fc-header-toolbar { padding: 1rem 0; }
+        .fc-button-primary { background-color: #1e293b !important; border: none !important; border-radius: 0.5rem !important; text-transform: capitalize; }
+        .fc-button-primary:hover { background-color: #0f172a !important; }
+        .fc-event { border-radius: 4px; border: none; padding: 2px 4px; cursor: pointer; font-size: 0.85rem; transition: transform 0.1s;}
+        .fc-event:hover { transform: scale(1.02); z-index: 10; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .fc-day-today { background-color: #f8fafc !important; } 
+        .fc-timegrid-slot { height: 2.5em !important; } 
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 via-gray-100 to-slate-200 min-h-screen p-4 sm:p-8">
+    
+    <div class="w-full max-w-7xl mx-auto glass-panel rounded-[2rem] shadow-2xl p-6 sm:p-10 relative">
+        
+        <a href="/" class="absolute top-8 left-8 p-2 rounded-full hover:bg-white/50 transition-colors text-slate-500 hover:text-slate-800 z-10">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+        </a>
+
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-8 pt-2 sm:pt-0">
+            <div class="text-center sm:text-left mb-4 sm:mb-0 pl-0 sm:pl-12">
+                <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Lịch Đặt Phòng</h1>
+                <p class="text-slate-500 mt-2 text-sm">Quản lý tình trạng phòng trực tiếp từ Notion</p>
+            </div>
+            
+            <div class="bg-white/70 p-4 rounded-2xl border border-white/50 shadow-sm min-w-[220px] text-center sm:text-right">
+                <p class="text-xs text-slate-400 uppercase tracking-wider font-bold mb-1">Doanh thu tuần này</p>
+                <p class="text-2xl font-bold text-emerald-600" id="weekly-revenue">0 ₫</p>
+            </div>
+        </div>
+
+        <div id='calendar' class="bg-white/50 p-4 rounded-2xl"></div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var revenueEl = document.getElementById('weekly-revenue');
+            
+            // Hàm riêng biệt để tính tiền CHỈ CHO TUẦN HIỆN TẠI
+            function calculateWeeklyRevenue(calInstance) {
+                if (!calInstance || !calInstance.view) return;
+
+                // Lấy mốc thời gian bắt đầu và kết thúc của tuần đang hiển thị trên màn hình
+                let viewStart = calInstance.view.activeStart;
+                let viewEnd = calInstance.view.activeEnd;
+                let totalWeeklyRevenue = 0;
+
+                // Quét qua các event và kiểm tra xem nó có rớt vào tuần này không
+                calInstance.getEvents().forEach(function(event) {
+                    let eStart = event.start;
+                    let eEnd = event.end || event.start;
+
+                    // Điều kiện: Thời gian booking phải GIAO NHAU với khung giờ của tuần hiện tại
+                    if (eStart < viewEnd && eEnd > viewStart) {
+                        const amount = event.extendedProps.total_amount;
+                        if (amount) {
+                            totalWeeklyRevenue += parseInt(amount);
+                        }
+                    }
+                });
+
+                // Cập nhật lên màn hình
+                revenueEl.innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalWeeklyRevenue);
+            }
+
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek', 
+                locale: 'vi', 
+                height: 'auto',
+                allDaySlot: false, 
+
+                headerToolbar: {
+                    left: 'prev,next',
+                    center: 'title',
+                    right: '' 
+                },
+                
+                events: '/api/bookings',
+                eventTimeFormat: {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                },
+
+                // Kích hoạt tính tiền khi BẤM NÚT QUA/LẠI CHUYỂN TUẦN
+                datesSet: function(info) {
+                    calculateWeeklyRevenue(info.view.calendar);
+                },
+
+                // Kích hoạt tính tiền khi DỮ LIỆU TỪ NOTION TẢI XONG
+                eventsSet: function(events) {
+                    if (typeof calendar !== 'undefined') {
+                        calculateWeeklyRevenue(calendar);
+                    }
+                },
+
+                eventClick: function(info) {
+                    const title = info.event.title;
+                    const checkin = info.event.start.toLocaleString('vi-VN', { hour: '2-digit', minute:'2-digit', day: '2-digit', month: '2-digit' });
+                    const checkout = info.event.end ? info.event.end.toLocaleString('vi-VN', { hour: '2-digit', minute:'2-digit', day: '2-digit', month: '2-digit' }) : 'Không rõ';
+                    const amount = info.event.extendedProps.total_amount || 0;
+                    
+                    const formattedAmount = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+
+                    Swal.fire({
+                        title: '<span class="text-slate-800">Chi tiết Booking</span>',
+                        html: `
+                            <div class="text-left mt-4 space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-100 text-sm">
+                                <div class="flex justify-between border-b pb-2"><span class="text-slate-500">Khách hàng:</span> <strong class="text-slate-800">${title}</strong></div>
+                                <div class="flex justify-between border-b pb-2"><span class="text-slate-500">Check-in:</span> <strong class="text-slate-800">${checkin}</strong></div>
+                                <div class="flex justify-between border-b pb-2"><span class="text-slate-500">Check-out:</span> <strong class="text-slate-800">${checkout}</strong></div>
+                                <div class="flex justify-between pt-1"><span class="text-slate-500">Tổng tiền:</span> <strong class="text-emerald-600 text-base">${formattedAmount}</strong></div>
+                            </div>
+                        `,
+                        showCloseButton: true,
+                        showConfirmButton: false,
+                        customClass: {
+                            popup: 'rounded-2xl',
+                        }
+                    });
+                }
+            });
+            
+            calendar.render();
+        });
+    </script>
+</body>
+</html>
