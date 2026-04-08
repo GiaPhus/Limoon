@@ -5,9 +5,16 @@ import calendar
 
 import os
 from dotenv import load_dotenv
+import re
+import unicodedata
 
 load_dotenv()
 app = Flask(__name__)
+
+def remove_accents(input_str):
+    s1 = unicodedata.normalize('NFD', input_str)
+    s2 = re.sub(r'[\u0300-\u036f]', '', s1)
+    return s2.replace('đ', 'd').replace('Đ', 'D')
 
 # --- CẤU HÌNH NOTION CỦA BẠN ---
 NOTION_API_KEY = os.getenv("NOTION_API_KEY")
@@ -185,14 +192,16 @@ def expenses_page():
     total_cleaning = 0
 
     for t in transactions:
-        # Chỉ lấy những giao dịch có ngày bắt đầu bằng tháng được chọn (VD: "2026-04-15".startswith("2026-04"))
         if t['raw_date'].startswith(selected_month):
             filtered_transactions.append(t)
             if t['type'] == 'income':
                 total_income += t['amount']
             else:
                 total_expenses += t['amount']
-                if "dọn phòng" in t['desc'].lower():
+                
+                # --- ĐÃ SỬA CHỖ NÀY: Lột sạch dấu rồi mới check chữ "don phong" ---
+                desc_clean = remove_accents(t['desc']).lower()
+                if "don phong" in desc_clean:
                     total_cleaning += t['amount']
 
     profit = total_income - total_expenses
