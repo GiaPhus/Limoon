@@ -62,18 +62,13 @@
             // Hàm riêng biệt để tính tiền CHỈ CHO TUẦN HIỆN TẠI
             function calculateWeeklyRevenue(calInstance) {
                 if (!calInstance || !calInstance.view) return;
-
-                // Lấy mốc thời gian bắt đầu và kết thúc của tuần đang hiển thị trên màn hình
                 let viewStart = calInstance.view.activeStart;
                 let viewEnd = calInstance.view.activeEnd;
                 let totalWeeklyRevenue = 0;
 
-                // Quét qua các event và kiểm tra xem nó có rớt vào tuần này không
                 calInstance.getEvents().forEach(function(event) {
                     let eStart = event.start;
                     let eEnd = event.end || event.start;
-
-                    // Điều kiện: Thời gian booking phải GIAO NHAU với khung giờ của tuần hiện tại
                     if (eStart < viewEnd && eEnd > viewStart) {
                         const amount = event.extendedProps.total_amount;
                         if (amount) {
@@ -81,14 +76,16 @@
                         }
                     }
                 });
-
-                // Cập nhật lên màn hình
                 revenueEl.innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalWeeklyRevenue);
             }
 
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'timeGridWeek', 
                 locale: 'vi', 
+                
+                // --- THÊM DÒNG NÀY ĐỂ ÉP BẮT ĐẦU TỪ THỨ 2 ---
+                firstDay: 1, 
+
                 height: 'auto',
                 allDaySlot: false, 
 
@@ -105,12 +102,10 @@
                     hour12: false
                 },
 
-                // Kích hoạt tính tiền khi BẤM NÚT QUA/LẠI CHUYỂN TUẦN
                 datesSet: function(info) {
                     calculateWeeklyRevenue(info.view.calendar);
                 },
 
-                // Kích hoạt tính tiền khi DỮ LIỆU TỪ NOTION TẢI XONG
                 eventsSet: function(events) {
                     if (typeof calendar !== 'undefined') {
                         calculateWeeklyRevenue(calendar);
